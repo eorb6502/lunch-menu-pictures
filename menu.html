@@ -46,7 +46,10 @@ function isAllowedUrl(urlStr) {
 try {
   const raw = new URLSearchParams(location.search).get('data');
   if (!raw) throw new Error('no data');
-  const items = JSON.parse(decodeURIComponent(escape(atob(raw))));
+  // URL-safe base64 → 표준 base64로 변환 후 디코딩
+  var b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4) b64 += '=';
+  const items = JSON.parse(decodeURIComponent(escape(atob(b64))));
 
   if (!Array.isArray(items) || !items.length) throw new Error('empty');
 

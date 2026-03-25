@@ -46,7 +46,7 @@ function isAllowedUrl(urlStr) {
 try {
   const raw = new URLSearchParams(location.search).get('data');
   if (!raw) throw new Error('no data');
-  const items = JSON.parse(atob(raw));
+  const items = JSON.parse(decodeURIComponent(escape(atob(raw))));
 
   if (!Array.isArray(items) || !items.length) throw new Error('empty');
 

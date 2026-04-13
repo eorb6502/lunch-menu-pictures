@@ -13,8 +13,17 @@ h1 { text-align: center; font-size: 22px; margin-bottom: 20px; color: #333; }
 .card img { width: 100%; display: block; cursor: pointer; transition: opacity 0.2s; }
 .card img:active { opacity: 0.8; }
 .card .label { padding: 12px 16px; }
-.card .category { font-size: 13px; font-weight: 700; color: #666; margin-bottom: 2px; }
-.card .name { font-size: 15px; color: #333; }
+.card .header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+.card .category { font-size: 13px; font-weight: 700; color: #666; }
+.card .traffic { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.card .traffic::before { content: '●'; margin-right: 3px; font-size: 9px; vertical-align: middle; }
+.card .traffic.smooth { color: #2d7a3a; }
+.card .traffic.busy { color: #c77700; }
+.card .traffic.heavy { color: #c0392b; }
+.card .name-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.card .name { font-size: 15px; color: #333; flex: 1; }
+.card .kcal { font-size: 12px; color: #888; font-weight: 600; white-space: nowrap; }
+.card .dishes { font-size: 13px; color: #666; line-height: 1.6; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eee; }
 .empty { text-align: center; color: #999; margin-top: 40px; font-size: 15px; }
 
 .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; }
@@ -53,10 +62,19 @@ try {
 
   if (!Array.isArray(items) || !items.length) throw new Error('empty');
 
+  const TRAFFIC_MAP = {
+    SMOOTH: { label: '원활', cls: 'smooth' },
+    BUSY:   { label: '혼잡', cls: 'busy' },
+    HEAVY:  { label: '지연', cls: 'heavy' },
+  };
+
   items.forEach(item => {
     const imgUrl = item.i || item.image;
     const name = item.n || item.name || '';
     const category = item.c || item.category || '';
+    const kcal = item.k || '';
+    const dishes = Array.isArray(item.d) ? item.d : [];
+    const traffic = item.t || '';
 
     if (!imgUrl || !isAllowedUrl(imgUrl)) return;
 
@@ -70,7 +88,24 @@ try {
 
     const label = document.createElement('div');
     label.className = 'label';
-    label.innerHTML = '<div class="category">' + esc(category) + '</div><div class="name">' + esc(name) + '</div>';
+
+    let trafficHtml = '';
+    if (traffic) {
+      const t = TRAFFIC_MAP[traffic] || { label: traffic, cls: '' };
+      trafficHtml = '<div class="traffic ' + t.cls + '">' + esc(t.label) + '</div>';
+    }
+
+    const kcalHtml = kcal ? '<div class="kcal">' + esc(kcal) + '</div>' : '';
+
+    const sides = dishes
+      .filter(d => d && !d.includes('♥') && d.trim() !== name.trim())
+      .map(d => esc(d.trim()));
+    const dishesHtml = sides.length ? '<div class="dishes">' + sides.join(' · ') + '</div>' : '';
+
+    label.innerHTML =
+      '<div class="header"><div class="category">' + esc(category) + '</div>' + trafficHtml + '</div>' +
+      '<div class="name-row"><div class="name">' + esc(name) + '</div>' + kcalHtml + '</div>' +
+      dishesHtml;
 
     card.appendChild(img);
     card.appendChild(label);
